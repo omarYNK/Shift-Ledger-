@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  hourlyRate  Decimal? @map("hourly_rate") @db.Decimal(10, 2)
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  timeEntries TimeEntry[]
+  fixedItems  FixedItem[]
+  invoices    Invoice[]
+
+  @@map("clients")
+}
+
+model Employee {
+  id         String    @id @default(uuid())
+  name       String
+  archivedAt DateTime? @map("archived_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  timeEntries TimeEntry[]
+  fixedItems  FixedItem[]
+
+  @@map("employees")
+}
+
+model TimeEntry {
+  id           String    @id @default(uuid())
+  employeeId   String    @map("employee_id")
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  employeeName String    @map("employee_name")
+  clientId     String?   @map("client_id")
+  client       Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName   String    @map("client_name")
+  date         DateTime  @db.Date
+  startTime    String    @map("start_time")
+  endTime      String    @map("end_time")
+  hours        Decimal   @db.Decimal(6, 2)
+  rate         Decimal   @db.Decimal(10, 2)
+  amount       Decimal   @db.Decimal(10, 2)
+  note         String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  invoicedAt   DateTime? @map("invoiced_at")
+
+  @@map("time_entries")
+  @@index([clientId, date])
+  @@index([employeeId, date])
+}
+
+model FixedItem {
+  id           String    @id @default(uuid())
+  clientId     String?   @map("client_id")
+  client       Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName   String    @map("client_name")
+  employeeId   String?   @map("employee_id")
+  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeName String?   @map("employee_name")
+  date         DateTime  @db.Date
+  description  String
+  amount       Decimal   @db.Decimal(10, 2)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  invoicedAt   DateTime? @map("invoiced_at")
+
+  @@map("fixed_items")
+  @@index([clientId, date])
+  @@index([employeeId, date])
+}
+
+model Invoice {
+  id             String   @id @default(uuid())
+  clientId       String?  @map("client_id")
+  client         Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientName     String   @map("client_name")
+  periodStart    DateTime @map("period_start") @db.Date
+  periodEnd      DateTime @map("period_end") @db.Date
+  invoiceNumber  String   @map("invoice_number")
+  version        Int      @default(1)
+  subtotalLabor  Decimal  @map("subtotal_labor") @db.Decimal(10, 2)
+  subtotalFixed  Decimal  @map("subtotal_fixed") @db.Decimal(10, 2)
+  total          Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("invoices")
+}
+
+model BusinessSettings {
+  id            Int    @id @default(1)
+  businessName  String @default("Shift Ledger") @map("business_name")
+  businessInfo  String @default("") @map("business_info")
+
+  @@map("business_settings")
+}
