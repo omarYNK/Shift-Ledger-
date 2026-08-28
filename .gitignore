@@ -42,5 +42,3 @@ next-env.d.ts
 
 # prisma
 /src/generated/prisma
-
-/src/generated/prisma
