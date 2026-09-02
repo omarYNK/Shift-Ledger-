@@ -38,6 +38,7 @@ async function handle(clientId: string, periodStartRaw: string, periodEndRaw: st
         hours: Number(e.hours),
         rate: Number(e.rate),
         amount: Number(e.amount),
+        note: e.note,
       }))}
       fixedItems={fixedItems.map((f) => ({ date: f.date, description: f.description, amount: Number(f.amount) }))}
       subtotalLabor={subtotalLabor}

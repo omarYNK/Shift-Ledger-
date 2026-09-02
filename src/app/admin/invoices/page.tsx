@@ -87,7 +87,10 @@ export default async function InvoicesPage({
                         <tr key={e.id}>
                           <td>{formatDate(e.date)}</td>
                           <td>{e.employeeName}</td>
-                          <td>{e.startTime}–{e.endTime}</td>
+                          <td>
+                            {e.startTime}–{e.endTime}
+                            {e.note && <div className="muted" style={{ fontSize: 12 }}>{e.note}</div>}
+                          </td>
                           <td className="num">{Number(e.hours).toFixed(2)}</td>
                           <td className="num">${Number(e.rate).toFixed(2)}</td>
                           <td className="num">${Number(e.amount).toFixed(2)}</td>

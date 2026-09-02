@@ -34,6 +34,7 @@ const styles = StyleSheet.create({
   tableHeaderCell: { fontSize: 8, fontFamily: "Helvetica-Bold", textTransform: "uppercase", color: "#555" },
   groupHeaderRow: { paddingTop: 10, paddingBottom: 3 },
   groupHeaderText: { fontSize: 9, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 0.5 },
+  noteText: { fontSize: 8, color: "#777", marginTop: 2 },
   row: {
     flexDirection: "row",
     paddingVertical: 4,
@@ -86,6 +87,7 @@ export type InvoicePdfProps = {
     hours: number;
     rate: number;
     amount: number;
+    note?: string | null;
   }>;
   fixedItems: Array<{ date: Date; description: string; amount: number }>;
   subtotalLabor: number;
@@ -155,9 +157,12 @@ export function InvoicePdf(props: InvoicePdfProps) {
           {laborItems.map((item, i) => (
             <View style={styles.row} key={`labor-${i}`} wrap={false}>
               <Text style={styles.colDate}>{fmtDate(item.date)}</Text>
-              <Text style={styles.colDesc}>
-                Labor — {item.employeeName} ({item.startTime}–{item.endTime})
-              </Text>
+              <View style={styles.colDesc}>
+                <Text>
+                  Labor — {item.employeeName} ({item.startTime}–{item.endTime})
+                </Text>
+                {item.note && <Text style={styles.noteText}>{item.note}</Text>}
+              </View>
               <Text style={styles.colHours}>{item.hours.toFixed(2)}</Text>
               <Text style={styles.colRate}>{currency.format(item.rate)}</Text>
               <Text style={styles.colAmount}>{currency.format(item.amount)}</Text>
