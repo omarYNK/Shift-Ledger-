@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { monthKey, monthRange, formatDate } from "@/lib/period";
 import { formatMonthLabel } from "@/lib/period";
+import { TimeEntryRow } from "@/components/TimeEntryRow";
+import { updateTimeEntryAsAdmin, deleteTimeEntryAsAdmin } from "@/lib/actions/entry-actions";
 
 export default async function AllEntriesPage({
   searchParams,
@@ -12,18 +14,21 @@ export default async function AllEntriesPage({
   const clientId = params.clientId || "";
   const { start, end } = monthRange(key);
 
-  const clients = await prisma.client.findMany({ orderBy: { name: "asc" } });
-
-  const entries = await prisma.timeEntry.findMany({
-    where: {
-      date: { gte: start, lte: end },
-      ...(clientId ? { clientId } : {}),
-    },
-    orderBy: { date: "desc" },
-  });
+  const [clients, rateSetClients, entries] = await Promise.all([
+    prisma.client.findMany({ orderBy: { name: "asc" } }),
+    prisma.client.findMany({ where: { hourlyRate: { not: null } }, orderBy: { name: "asc" } }),
+    prisma.timeEntry.findMany({
+      where: {
+        date: { gte: start, lte: end },
+        ...(clientId ? { clientId } : {}),
+      },
+      orderBy: { date: "desc" },
+    }),
+  ]);
 
   const totalHours = entries.reduce((sum, e) => sum + Number(e.hours), 0);
   const totalAmount = entries.reduce((sum, e) => sum + Number(e.amount), 0);
+  const clientOptions = rateSetClients.map((c) => ({ id: c.id, name: c.name, hourlyRate: Number(c.hourlyRate) }));
 
   return (
     <div className="card">
@@ -63,16 +68,25 @@ export default async function AllEntriesPage({
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id}>
-                <td>{formatDate(e.date)}</td>
-                <td>{e.employeeName}</td>
-                <td>{e.clientName}</td>
-                <td>{e.startTime}–{e.endTime}</td>
-                <td className="num">{Number(e.hours).toFixed(2)}</td>
-                <td className="num">${Number(e.rate).toFixed(2)}</td>
-                <td className="num">${Number(e.amount).toFixed(2)}</td>
-                <td>{e.invoicedAt && <span className="badge badge-muted">Invoiced</span>}</td>
-              </tr>
+              <TimeEntryRow
+                key={e.id}
+                dateISO={e.date.toISOString().slice(0, 10)}
+                dateLabel={formatDate(e.date)}
+                clientId={e.clientId ?? ""}
+                clientName={e.clientName}
+                employeeName={e.employeeName}
+                startTime={e.startTime}
+                endTime={e.endTime}
+                hours={Number(e.hours)}
+                rate={Number(e.rate)}
+                amount={Number(e.amount)}
+                note={e.note}
+                invoiced={e.invoicedAt !== null}
+                clients={clientOptions}
+                showRateColumn
+                onSave={updateTimeEntryAsAdmin.bind(null, e.id)}
+                onDelete={deleteTimeEntryAsAdmin.bind(null, e.id)}
+              />
             ))}
           </tbody>
           <tfoot>

@@ -4,9 +4,10 @@ import { getIdentity } from "@/lib/identity";
 import { monthKey, monthRange, formatDate, formatMonthLabel } from "@/lib/period";
 import { SwitchUserLink } from "@/components/SwitchUserLink";
 import { LogForm } from "@/components/LogForm";
-import { DeleteEntryButton } from "@/components/DeleteEntryButton";
+import { TimeEntryRow } from "@/components/TimeEntryRow";
 import { DeleteOwnFixedItemButton } from "@/components/DeleteOwnFixedItemButton";
 import { createFixedItem } from "@/lib/actions/fixed-item-actions";
+import { updateOwnTimeEntry, deleteOwnTimeEntry } from "@/lib/actions/entry-actions";
 
 export default async function LogPage() {
   const identity = await getIdentity();
@@ -81,23 +82,23 @@ export default async function LogPage() {
             </thead>
             <tbody>
               {entries.map((e) => (
-                <tr key={e.id}>
-                  <td>{formatDate(e.date)}</td>
-                  <td>{e.clientName}</td>
-                  <td>
-                    {e.startTime}–{e.endTime}
-                    {e.note && <div className="muted" style={{ fontSize: 12 }}>{e.note}</div>}
-                  </td>
-                  <td className="num">{Number(e.hours).toFixed(2)}</td>
-                  <td className="num">${Number(e.amount).toFixed(2)}</td>
-                  <td>
-                    {e.invoicedAt ? (
-                      <span className="badge badge-muted">Invoiced</span>
-                    ) : (
-                      <DeleteEntryButton entryId={e.id} employeeId={identity.employeeId} />
-                    )}
-                  </td>
-                </tr>
+                <TimeEntryRow
+                  key={e.id}
+                  dateISO={e.date.toISOString().slice(0, 10)}
+                  dateLabel={formatDate(e.date)}
+                  clientId={e.clientId ?? ""}
+                  clientName={e.clientName}
+                  startTime={e.startTime}
+                  endTime={e.endTime}
+                  hours={Number(e.hours)}
+                  rate={Number(e.rate)}
+                  amount={Number(e.amount)}
+                  note={e.note}
+                  invoiced={e.invoicedAt !== null}
+                  clients={clients.map((c) => ({ id: c.id, name: c.name, hourlyRate: Number(c.hourlyRate) }))}
+                  onSave={updateOwnTimeEntry.bind(null, e.id, identity.employeeId)}
+                  onDelete={deleteOwnTimeEntry.bind(null, e.id, identity.employeeId)}
+                />
               ))}
             </tbody>
           </table>
