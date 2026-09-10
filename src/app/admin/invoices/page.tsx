@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { monthKey, monthRange, formatDate, formatMonthLabel } from "@/lib/period";
 import { getInvoiceData } from "@/lib/invoice";
+import { formatCurrency } from "@/lib/currency";
 
 function toISODate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -92,8 +93,8 @@ export default async function InvoicesPage({
                             {e.note && <div className="muted" style={{ fontSize: 12 }}>{e.note}</div>}
                           </td>
                           <td className="num">{Number(e.hours).toFixed(2)}</td>
-                          <td className="num">${Number(e.rate).toFixed(2)}</td>
-                          <td className="num">${Number(e.amount).toFixed(2)}</td>
+                          <td className="num">{formatCurrency(Number(e.rate))}</td>
+                          <td className="num">{formatCurrency(Number(e.amount))}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -117,7 +118,7 @@ export default async function InvoicesPage({
                         <tr key={f.id}>
                           <td>{formatDate(f.date)}</td>
                           <td>{f.description}</td>
-                          <td className="num">${Number(f.amount).toFixed(2)}</td>
+                          <td className="num">{formatCurrency(Number(f.amount))}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -127,9 +128,9 @@ export default async function InvoicesPage({
 
               <div className="stat-row" style={{ justifyContent: "flex-end", textAlign: "right" }}>
                 <div>
-                  <div className="muted" style={{ fontSize: 13 }}>Labor subtotal: ${preview.subtotalLabor.toFixed(2)}</div>
-                  <div className="muted" style={{ fontSize: 13 }}>Other charges subtotal: ${preview.subtotalFixed.toFixed(2)}</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Total due: ${preview.total.toFixed(2)}</div>
+                  <div className="muted" style={{ fontSize: 13 }}>Labor subtotal: {formatCurrency(preview.subtotalLabor)}</div>
+                  <div className="muted" style={{ fontSize: 13 }}>Other charges subtotal: {formatCurrency(preview.subtotalFixed)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Total due: {formatCurrency(preview.total)}</div>
                 </div>
               </div>
             </>
@@ -169,7 +170,7 @@ export default async function InvoicesPage({
                   <td>{inv.invoiceNumber}</td>
                   <td>{inv.clientName}</td>
                   <td>{formatDate(inv.periodStart)} – {formatDate(inv.periodEnd)}</td>
-                  <td className="num">${Number(inv.total).toFixed(2)}</td>
+                  <td className="num">{formatCurrency(Number(inv.total))}</td>
                   <td>{formatDate(inv.createdAt)}</td>
                 </tr>
               ))}

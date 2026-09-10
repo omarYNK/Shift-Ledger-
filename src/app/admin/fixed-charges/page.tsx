@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { createFixedItem } from "@/lib/actions/fixed-item-actions";
 import { DeleteFixedItemButton } from "@/components/DeleteFixedItemButton";
 import { formatDate } from "@/lib/period";
+import { formatCurrency } from "@/lib/currency";
 
 export default async function FixedChargesPage() {
   const [clients, items] = await Promise.all([
@@ -31,13 +32,16 @@ export default async function FixedChargesPage() {
             </div>
             <div className="form-row">
               <label htmlFor="amount">Amount ($)</label>
-              <input id="amount" name="amount" type="number" step="0.01" min="0" required />
+              <input id="amount" name="amount" type="number" step="0.01" required />
             </div>
           </div>
           <div className="form-row">
             <label htmlFor="description">Description</label>
-            <input id="description" name="description" placeholder="e.g. Polymailers x500" required />
+            <input id="description" name="description" placeholder="e.g. Polymailers x500, or Credit — damaged order" required />
           </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: -8, marginBottom: 14 }}>
+            Enter a negative amount (e.g. -50) to credit the client instead of charging them.
+          </p>
           <button type="submit" className="btn-primary">Add charge</button>
         </form>
       </div>
@@ -65,7 +69,7 @@ export default async function FixedChargesPage() {
                   <td>{item.clientName}</td>
                   <td>{item.description}</td>
                   <td className="muted">{item.employeeName ?? "Admin"}</td>
-                  <td className="num">${Number(item.amount).toFixed(2)}</td>
+                  <td className="num">{formatCurrency(Number(item.amount))}</td>
                   <td>
                     {item.invoicedAt ? (
                       <span className="badge badge-muted">Invoiced</span>

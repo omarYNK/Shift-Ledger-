@@ -8,6 +8,7 @@ import { TimeEntryRow } from "@/components/TimeEntryRow";
 import { DeleteOwnFixedItemButton } from "@/components/DeleteOwnFixedItemButton";
 import { createFixedItem } from "@/lib/actions/fixed-item-actions";
 import { updateOwnTimeEntry, deleteOwnTimeEntry } from "@/lib/actions/entry-actions";
+import { formatCurrency } from "@/lib/currency";
 
 export default async function LogPage() {
   const identity = await getIdentity();
@@ -128,13 +129,16 @@ export default async function LogPage() {
             </div>
             <div className="form-row">
               <label htmlFor="fi-amount">Amount ($)</label>
-              <input id="fi-amount" name="amount" type="number" step="0.01" min="0" required />
+              <input id="fi-amount" name="amount" type="number" step="0.01" required />
             </div>
           </div>
           <div className="form-row">
             <label htmlFor="fi-description">Description</label>
-            <input id="fi-description" name="description" placeholder="e.g. Polymailers x500" required />
+            <input id="fi-description" name="description" placeholder="e.g. Polymailers x500, or Credit — damaged order" required />
           </div>
+          <p className="muted" style={{ fontSize: 12, marginTop: -8, marginBottom: 14 }}>
+            Enter a negative amount (e.g. -50) to credit the client instead of charging them.
+          </p>
           <button type="submit" className="btn-primary">Add charge</button>
         </form>
       </div>
@@ -160,7 +164,7 @@ export default async function LogPage() {
                   <td>{formatDate(f.date)}</td>
                   <td>{f.clientName}</td>
                   <td>{f.description}</td>
-                  <td className="num">${Number(f.amount).toFixed(2)}</td>
+                  <td className="num">{formatCurrency(Number(f.amount))}</td>
                   <td>
                     {f.invoicedAt ? (
                       <span className="badge badge-muted">Invoiced</span>
