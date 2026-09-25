@@ -85,6 +85,7 @@ export type InvoicePdfProps = {
     startTime: string;
     endTime: string;
     hours: number;
+    peopleCount?: number;
     rate: number;
     amount: number;
     note?: string | null;
@@ -161,9 +162,14 @@ export function InvoicePdf(props: InvoicePdfProps) {
                 <Text>
                   Labor — {item.employeeName} ({item.startTime}–{item.endTime})
                 </Text>
+                {(item.peopleCount ?? 1) > 1 && (
+                  <Text style={styles.noteText}>
+                    {item.peopleCount} people × {item.hours.toFixed(2)} hrs
+                  </Text>
+                )}
                 {item.note && <Text style={styles.noteText}>{item.note}</Text>}
               </View>
-              <Text style={styles.colHours}>{item.hours.toFixed(2)}</Text>
+              <Text style={styles.colHours}>{(item.hours * (item.peopleCount ?? 1)).toFixed(2)}</Text>
               <Text style={styles.colRate}>{currency.format(item.rate)}</Text>
               <Text style={styles.colAmount}>{currency.format(item.amount)}</Text>
             </View>

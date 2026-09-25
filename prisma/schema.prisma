@@ -48,6 +48,7 @@ model TimeEntry {
   startTime    String    @map("start_time")
   endTime      String    @map("end_time")
   hours        Decimal   @db.Decimal(6, 2)
+  peopleCount  Int       @default(1) @map("people_count")
   rate         Decimal   @db.Decimal(10, 2)
   amount       Decimal   @db.Decimal(10, 2)
   note         String?

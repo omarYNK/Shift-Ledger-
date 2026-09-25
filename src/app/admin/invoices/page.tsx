@@ -90,9 +90,14 @@ export default async function InvoicesPage({
                           <td>{e.employeeName}</td>
                           <td>
                             {e.startTime}–{e.endTime}
+                            {e.peopleCount > 1 && (
+                              <div className="muted" style={{ fontSize: 12 }}>
+                                {e.peopleCount} people × {Number(e.hours).toFixed(2)} hrs
+                              </div>
+                            )}
                             {e.note && <div className="muted" style={{ fontSize: 12 }}>{e.note}</div>}
                           </td>
-                          <td className="num">{Number(e.hours).toFixed(2)}</td>
+                          <td className="num">{(Number(e.hours) * e.peopleCount).toFixed(2)}</td>
                           <td className="num">{formatCurrency(Number(e.rate))}</td>
                           <td className="num">{formatCurrency(Number(e.amount))}</td>
                         </tr>

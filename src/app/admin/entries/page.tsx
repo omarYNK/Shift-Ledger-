@@ -26,7 +26,7 @@ export default async function AllEntriesPage({
     }),
   ]);
 
-  const totalHours = entries.reduce((sum, e) => sum + Number(e.hours), 0);
+  const totalHours = entries.reduce((sum, e) => sum + Number(e.hours) * e.peopleCount, 0);
   const totalAmount = entries.reduce((sum, e) => sum + Number(e.amount), 0);
   const clientOptions = rateSetClients.map((c) => ({ id: c.id, name: c.name, hourlyRate: Number(c.hourlyRate) }));
 
@@ -78,6 +78,7 @@ export default async function AllEntriesPage({
                 startTime={e.startTime}
                 endTime={e.endTime}
                 hours={Number(e.hours)}
+                peopleCount={e.peopleCount}
                 rate={Number(e.rate)}
                 amount={Number(e.amount)}
                 note={e.note}

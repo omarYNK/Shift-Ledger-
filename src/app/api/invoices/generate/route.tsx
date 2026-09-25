@@ -36,6 +36,7 @@ async function handle(clientId: string, periodStartRaw: string, periodEndRaw: st
         startTime: e.startTime,
         endTime: e.endTime,
         hours: Number(e.hours),
+        peopleCount: e.peopleCount,
         rate: Number(e.rate),
         amount: Number(e.amount),
         note: e.note,

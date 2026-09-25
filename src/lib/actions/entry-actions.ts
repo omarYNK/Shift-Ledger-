@@ -9,17 +9,29 @@ export type TimeEntryInput = {
   date: string; // yyyy-mm-dd
   startTime: string; // HH:MM
   endTime: string; // HH:MM
+  peopleCount?: number; // how many people worked this shift (default 1)
   note?: string;
 };
 
-async function computeEntryFields(input: TimeEntryInput) {
+// existing: when editing, an unchanged client keeps its original rate snapshot
+// so adding a headcount to an old entry never silently reprices it.
+async function computeEntryFields(
+  input: TimeEntryInput,
+  existing?: { clientId: string | null; rate: unknown },
+) {
   const client = await prisma.client.findUnique({ where: { id: input.clientId } });
   if (!client) throw new Error("Client not found");
   if (client.hourlyRate === null) throw new Error("This client has no rate set yet");
 
+  const peopleCount = input.peopleCount ?? 1;
+  if (!Number.isInteger(peopleCount) || peopleCount < 1 || peopleCount > 100) {
+    throw new Error("People count must be a whole number from 1 to 100");
+  }
+
   const hours = computeHours(input.startTime, input.endTime);
-  const rate = Number(client.hourlyRate);
-  const amount = roundToCents(hours * rate);
+  const rate =
+    existing && existing.clientId === input.clientId ? Number(existing.rate) : Number(client.hourlyRate);
+  const amount = roundToCents(hours * peopleCount * rate);
 
   return {
     clientId: input.clientId,
@@ -28,6 +40,7 @@ async function computeEntryFields(input: TimeEntryInput) {
     startTime: input.startTime,
     endTime: input.endTime,
     hours,
+    peopleCount,
     rate,
     amount,
     note: input.note?.trim() || null,
@@ -69,7 +82,7 @@ export async function updateOwnTimeEntry(entryId: string, employeeId: string, in
   if (entry.employeeId !== employeeId) throw new Error("Not your entry");
   if (entry.invoicedAt) throw new Error("This entry has already been invoiced and can't be edited");
 
-  const fields = await computeEntryFields(input);
+  const fields = await computeEntryFields(input, entry);
   await prisma.timeEntry.update({ where: { id: entryId }, data: fields });
 
   revalidatePath("/log");
@@ -84,7 +97,7 @@ export async function updateTimeEntryAsAdmin(entryId: string, input: TimeEntryIn
   if (!entry) throw new Error("Entry not found");
   if (entry.invoicedAt) throw new Error("This entry has already been invoiced and can't be edited");
 
-  const fields = await computeEntryFields(input);
+  const fields = await computeEntryFields(input, entry);
   await prisma.timeEntry.update({ where: { id: entryId }, data: fields });
 
   revalidatePath("/log");

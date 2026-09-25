@@ -24,6 +24,7 @@ export function TimeEntryRow({
   startTime,
   endTime,
   hours,
+  peopleCount,
   rate,
   amount,
   note,
@@ -41,6 +42,7 @@ export function TimeEntryRow({
   startTime: string;
   endTime: string;
   hours: number;
+  peopleCount: number;
   rate: number;
   amount: number;
   note: string | null;
@@ -60,10 +62,19 @@ export function TimeEntryRow({
   const [fStart, setFStart] = useState(startTime);
   const [fEnd, setFEnd] = useState(endTime);
   const [fNote, setFNote] = useState(note ?? "");
+  const [fPeople, setFPeople] = useState(String(peopleCount));
 
   const selectedClient = clients.find((c) => c.id === fClientId);
   const preview = useMemo(() => computeHoursPreview(fStart, fEnd), [fStart, fEnd]);
-  const previewAmount = preview !== null && selectedClient ? preview * selectedClient.hourlyRate : null;
+  const peopleNum = Number(fPeople);
+  const peopleValid = Number.isInteger(peopleNum) && peopleNum >= 1 && peopleNum <= 100;
+  const previewTotalHours = preview !== null && peopleValid ? preview * peopleNum : null;
+  // Same client keeps the entry's original rate (matches the server); a new client uses its current rate.
+  const previewRate = fClientId === clientId ? rate : selectedClient?.hourlyRate;
+  const previewAmount =
+    previewTotalHours !== null && previewRate !== undefined ? previewTotalHours * previewRate : null;
+  const totalHours = hours * peopleCount;
+  const peopleLabel = peopleCount > 1 ? `${peopleCount} people × ${hours.toFixed(2)} hrs` : null;
 
   function startEdit() {
     setFClientId(clientId);
@@ -71,6 +82,7 @@ export function TimeEntryRow({
     setFStart(startTime);
     setFEnd(endTime);
     setFNote(note ?? "");
+    setFPeople(String(peopleCount));
     setError(null);
     setEditing(true);
   }
@@ -79,7 +91,14 @@ export function TimeEntryRow({
     setError(null);
     startTransition(async () => {
       try {
-        await onSave({ clientId: fClientId, date: fDate, startTime: fStart, endTime: fEnd, note: fNote });
+        await onSave({
+          clientId: fClientId,
+          date: fDate,
+          startTime: fStart,
+          endTime: fEnd,
+          peopleCount: peopleNum,
+          note: fNote,
+        });
         setEditing(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to save");
@@ -102,9 +121,10 @@ export function TimeEntryRow({
         <td>{clientName}</td>
         <td>
           {startTime}–{endTime}
+          {peopleLabel && <div className="muted" style={{ fontSize: 12 }}>{peopleLabel}</div>}
           {note && <div className="muted" style={{ fontSize: 12 }}>{note}</div>}
         </td>
-        <td className="num">{hours.toFixed(2)}</td>
+        <td className="num">{totalHours.toFixed(2)}</td>
         {showRateColumn && <td className="num">${rate.toFixed(2)}</td>}
         <td className="num">${amount.toFixed(2)}</td>
         <td><span className="badge badge-muted">Invoiced</span></td>
@@ -120,9 +140,10 @@ export function TimeEntryRow({
         <td>{clientName}</td>
         <td>
           {startTime}–{endTime}
+          {peopleLabel && <div className="muted" style={{ fontSize: 12 }}>{peopleLabel}</div>}
           {note && <div className="muted" style={{ fontSize: 12 }}>{note}</div>}
         </td>
-        <td className="num">{hours.toFixed(2)}</td>
+        <td className="num">{totalHours.toFixed(2)}</td>
         {showRateColumn && <td className="num">${rate.toFixed(2)}</td>}
         <td className="num">${amount.toFixed(2)}</td>
         <td style={{ display: "flex", gap: 6 }}>
@@ -152,11 +173,23 @@ export function TimeEntryRow({
           <input type="time" value={fStart} onChange={(e) => setFStart(e.target.value)} style={{ width: 100 }} />
           <input type="time" value={fEnd} onChange={(e) => setFEnd(e.target.value)} style={{ width: 100 }} />
         </div>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+          People
+          <input
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value={fPeople}
+            onChange={(e) => setFPeople(e.target.value)}
+            style={{ width: 70 }}
+          />
+        </label>
         <input value={fNote} onChange={(e) => setFNote(e.target.value)} placeholder="note (optional)" style={{ width: "100%" }} />
         {error && <div className="error-text">{error}</div>}
       </td>
-      <td className="num">{preview !== null ? preview.toFixed(2) : "—"}</td>
-      {showRateColumn && <td className="num">{selectedClient ? `$${selectedClient.hourlyRate.toFixed(2)}` : "—"}</td>}
+      <td className="num">{previewTotalHours !== null ? previewTotalHours.toFixed(2) : "—"}</td>
+      {showRateColumn && <td className="num">{previewRate !== undefined ? `$${previewRate.toFixed(2)}` : "—"}</td>}
       <td className="num">{previewAmount !== null ? `$${previewAmount.toFixed(2)}` : "—"}</td>
       <td style={{ display: "flex", gap: 6 }}>
         <button type="button" className="btn-sm btn-primary" onClick={save} disabled={isPending}>

@@ -30,6 +30,7 @@ export function LogForm({
   const [date, setDate] = useState(today);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [people, setPeople] = useState("1");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -37,7 +38,10 @@ export function LogForm({
 
   const selectedClient = clients.find((c) => c.id === clientId);
   const preview = useMemo(() => computeHoursPreview(startTime, endTime), [startTime, endTime]);
-  const previewAmount = preview !== null && selectedClient ? preview * selectedClient.hourlyRate : null;
+  const peopleNum = Number(people);
+  const peopleValid = Number.isInteger(peopleNum) && peopleNum >= 1 && peopleNum <= 100;
+  const previewAmount =
+    preview !== null && selectedClient && peopleValid ? preview * peopleNum * selectedClient.hourlyRate : null;
 
   if (clients.length === 0) {
     return (
@@ -60,11 +64,13 @@ export function LogForm({
           date,
           startTime,
           endTime,
+          peopleCount: peopleNum,
           note,
         });
         setSuccess(`Logged ${result.hours.toFixed(2)}h — $${result.amount.toFixed(2)}`);
         setStartTime("");
         setEndTime("");
+        setPeople("1");
         setNote("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
@@ -97,6 +103,10 @@ export function LogForm({
           <label htmlFor="endTime">End time</label>
           <input id="endTime" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
         </div>
+        <div className="form-row">
+          <label htmlFor="people">People worked</label>
+          <input id="people" type="number" min="1" max="100" step="1" value={people} onChange={(e) => setPeople(e.target.value)} required />
+        </div>
       </div>
 
       <div className="form-row">
@@ -107,6 +117,7 @@ export function LogForm({
       {preview !== null && (
         <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>
           {preview.toFixed(2)} hours
+          {peopleValid && peopleNum > 1 && <> × {peopleNum} people = {(preview * peopleNum).toFixed(2)} hours</>}
           {previewAmount !== null && <> · ${previewAmount.toFixed(2)}</>}
           {endTime && startTime && preview !== null && parseInt(endTime.slice(0, 2)) <= parseInt(startTime.slice(0, 2)) && (
             <span> (crosses midnight)</span>

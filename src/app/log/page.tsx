@@ -35,7 +35,7 @@ export default async function LogPage() {
     }),
   ]);
 
-  const totalHours = entries.reduce((sum, e) => sum + Number(e.hours), 0);
+  const totalHours = entries.reduce((sum, e) => sum + Number(e.hours) * e.peopleCount, 0);
   const totalPay = entries.reduce((sum, e) => sum + Number(e.amount), 0);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -92,6 +92,7 @@ export default async function LogPage() {
                   startTime={e.startTime}
                   endTime={e.endTime}
                   hours={Number(e.hours)}
+                  peopleCount={e.peopleCount}
                   rate={Number(e.rate)}
                   amount={Number(e.amount)}
                   note={e.note}
